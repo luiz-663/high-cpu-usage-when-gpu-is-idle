@@ -2,6 +2,8 @@
 *.ps1 text eol=crlf
 *.cs text eol=crlf
 *.cmd text eol=crlf
+# Keep the generated release bytes identical to the published SHA-256 checksum.
+dist/*.cmd -text
 *.md text eol=lf
 *.yml text eol=lf
 dist/SHA256SUMS.txt text eol=lf
