@@ -10,7 +10,7 @@ try {
     $psExe=Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
     while($true) {
         Write-Host ''
-        Write-Host 'GPU IDLE CPU WORKAROUND v0.1.0'
+        Write-Host 'DXGKRNL DIAGLOG CPU WORKAROUND v0.1.1'
         Write-Host 'Preserves GPU sleep settings. Experimental; configuration must match.'
         Write-Host '1 - Check configuration (read-only)'
         Write-Host '2 - Apply workaround'

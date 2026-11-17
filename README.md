@@ -1,12 +1,12 @@
-# GPU Idle CPU Workaround
+# DxgKrnl DiagLog CPU Workaround
 
-A reversible Windows workaround for sustained **System (PID 4) CPU usage triggered by GPU performance queries while a discrete GPU is idle**. It preserves the existing GPU sleep and power settings.
+A reversible Windows workaround for **sustained System (PID 4) CPU usage from the interaction between DxgKrnl performance queries and DiagLog tracing** in the investigated configuration. Querying an inactive discrete GPU exposed the problem; GPU inactivity alone was not the cause. The workaround preserves existing GPU sleep and power settings.
 
 **Experimental, configuration-specific, and validated on one notebook.** This is not an official Microsoft/NVIDIA fix or a general cure for DPC latency. The tool refuses configurations outside the values examined in the original investigation.
 
 ## Download and use
 
-Download **[GPU-Idle-CPU-Workaround.cmd](https://github.com/luiz-663/gpu-idle-cpu-workaround/releases/download/v0.1.0/GPU-Idle-CPU-Workaround.cmd)** from the [v0.1.0 release](https://github.com/luiz-663/gpu-idle-cpu-workaround/releases/tag/v0.1.0). Only this file is needed to run the tool. Source code is included in this repository; [SHA256SUMS.txt](dist/SHA256SUMS.txt) records the distributed file's hash.
+Download **[DxgKrnl-DiagLog-CPU-Workaround.cmd](https://github.com/luiz-663/dxgkrnl-diaglog-cpu-workaround/releases/download/v0.1.1/DxgKrnl-DiagLog-CPU-Workaround.cmd)** from the [v0.1.1 release](https://github.com/luiz-663/dxgkrnl-diaglog-cpu-workaround/releases/tag/v0.1.1). Only this file is needed to run the tool. Source code is included in this repository; [SHA256SUMS.txt](dist/SHA256SUMS.txt) records the distributed file's hash.
 
 1. Double-click the `.cmd` and approve the administrator prompt.
 2. Choose **1 — Check configuration** first.
@@ -89,7 +89,7 @@ The single-file launcher extracts its helpers to a temporary directory and remov
 %LOCALAPPDATA%\GpuIdleCpuWorkaround\<hashed Windows installation ID>\
 ```
 
-Keep this folder to retain the backup and recovery history. The public package contains **no machine-specific backup or installation ID**. A first Apply requires the original reviewed registry and runtime values so it can save the real starting configuration. Undo requires a backup matching this installation and schema.
+This internal directory name is retained for compatibility with existing backups after the project rename. Keep this folder to retain the backup and recovery history. The public package contains **no machine-specific backup or installation ID**. A first Apply requires the original reviewed registry and runtime values so it can save the real starting configuration. Undo requires a backup matching this installation and schema.
 
 If the setting was already changed by a different edition/tool, Check can still inspect it, but this edition will not invent an original backup. Use the previous tool to restore its own change before migrating. Do not copy another machine's backup.
 
@@ -98,8 +98,8 @@ If an operation fails, read the error and local operation log before repeating i
 ## Command-line options
 
 ```bat
-GPU-Idle-CPU-Workaround.cmd /check
-GPU-Idle-CPU-Workaround.cmd /status
+DxgKrnl-DiagLog-CPU-Workaround.cmd /check
+DxgKrnl-DiagLog-CPU-Workaround.cmd /status
 ```
 
 `/check` verifies embedded files and compiles the native helpers without changing system configuration or requesting elevation. `/status` requests administrator access if needed and reads the reviewed configuration. It does not measure CPU, prove physical sleep, or establish reboot persistence by itself.
@@ -113,7 +113,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Build.ps1
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\Test-Offline.ps1
 ```
 
-Output is `dist\GPU-Idle-CPU-Workaround.cmd` plus `dist\SHA256SUMS.txt`. No third-party build dependency is required. The launcher stores the source as Base64, a transport encoding, and checks embedded SHA-256 hashes. These hashes detect corruption; they are not a publisher signature.
+Output is `dist\DxgKrnl-DiagLog-CPU-Workaround.cmd` plus `dist\SHA256SUMS.txt`. No third-party build dependency is required. The launcher stores the source as Base64, a transport encoding, and checks embedded SHA-256 hashes. These hashes detect corruption; they are not a publisher signature.
 
 See [technical notes](docs/TECHNICAL.md), [validation](docs/VALIDATION.md), and [contributing](CONTRIBUTING.md). Reports from matching systems are useful; please include measured before/after behavior and describe the configuration, while keeping raw kernel dumps and private logs off public issues.
 

@@ -9,14 +9,14 @@ $files=foreach($name in $names){
     try{$hash=([BitConverter]::ToString($sha.ComputeHash($bytes))).Replace('-','')}finally{$sha.Dispose()}
     [pscustomobject]@{Name=$name;Hash=$hash;Data=[Convert]::ToBase64String($bytes)}
 }
-$package=[ordered]@{Version='0.1.0';Bootstrap=([IO.File]::ReadAllText((Join-Path $source 'Bootstrap.ps1')) -replace '\r?\n',"`r`n");Files=@($files)}
+$package=[ordered]@{Version='0.1.1';Bootstrap=([IO.File]::ReadAllText((Join-Path $source 'Bootstrap.ps1')) -replace '\r?\n',"`r`n");Files=@($files)}
 $payload=[Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes(($package|ConvertTo-Json -Depth 6 -Compress)))
 $loader='$ErrorActionPreference="Stop";$ProgressPreference="SilentlyContinue";try{$s=[IO.File]::ReadAllText($env:GPU_IDLE_CPU_SOURCE);$m=":GPU_IDLE_CPU_PAYLOAD_V1";$i=$s.LastIndexOf($m);if($i -lt 0){throw "Missing package payload"};$package=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($s.Substring($i+$m.Length).Trim()))|ConvertFrom-Json;& ([ScriptBlock]::Create($package.Bootstrap))}catch{Write-Host $_;exit 1}'
 $encoded=[Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($loader))
 $header=@'
 @echo off
 setlocal
-title GPU Idle CPU Workaround
+title DxgKrnl DiagLog CPU Workaround
 set "GPU_IDLE_CPU_SOURCE=%~f0"
 set "GPU_IDLE_CPU_MODE=Menu"
 if /i "%~1"=="/check" set "GPU_IDLE_CPU_MODE=Check"
@@ -32,9 +32,9 @@ exit /b %gpuResult%
 :GPU_IDLE_CPU_PAYLOAD_V1
 '@
 $header=$header.Replace('ENCODED_LOADER',$encoded) -replace '\r?\n',"`r`n"
-$output=Join-Path $root 'dist\GPU-Idle-CPU-Workaround.cmd'
+$output=Join-Path $root 'dist\DxgKrnl-DiagLog-CPU-Workaround.cmd'
 [IO.Directory]::CreateDirectory((Split-Path $output -Parent))|Out-Null
 [IO.File]::WriteAllText($output,($header+"`r`n"+[regex]::Replace($payload,'.{1,120}','$0'+"`r`n")),[Text.Encoding]::ASCII)
 $digest=(Get-FileHash -LiteralPath $output -Algorithm SHA256).Hash.ToLowerInvariant()
-[IO.File]::WriteAllText((Join-Path $root 'dist\SHA256SUMS.txt'),($digest+'  GPU-Idle-CPU-Workaround.cmd'+"`n"),[Text.Encoding]::ASCII)
+[IO.File]::WriteAllText((Join-Path $root 'dist\SHA256SUMS.txt'),($digest+'  DxgKrnl-DiagLog-CPU-Workaround.cmd'+"`n"),[Text.Encoding]::ASCII)
 Write-Output $output

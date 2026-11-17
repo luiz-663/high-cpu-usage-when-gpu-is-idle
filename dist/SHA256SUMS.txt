@@ -1,1 +1,1 @@
-e33becb404e03df50256d2f2fae1ccf3e5d57fa34f077f3acd40e75fb6ccb657  GPU-Idle-CPU-Workaround.cmd
+3ac74e6699572684d3b5c1a69db298e6476269a9fb99f26b76741148d46829dd  DxgKrnl-DiagLog-CPU-Workaround.cmd
