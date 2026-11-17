@@ -1,0 +1,22 @@
+name: Validate standalone package
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  offline:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build with Windows PowerShell 5.1
+        shell: powershell
+        run: .\scripts\Build.ps1
+      - name: Offline parser, guard and package tests
+        shell: powershell
+        run: .\tests\Test-Offline.ps1
+      - name: Verify committed distribution matches source
+        shell: powershell
+        run: |
+          git diff --exit-code -- dist
+          if ($LASTEXITCODE -ne 0) { throw 'Rebuild and commit dist before publishing.' }

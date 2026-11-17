@@ -1,0 +1,26 @@
+name: Compatibility report
+description: Report behavior on another configuration or a changed Windows build.
+title: "[Compatibility] "
+body:
+  - type: markdown
+    attributes:
+      value: "Please share measurements and redacted details. Do not upload raw kernel dumps or private logs."
+  - type: textarea
+    id: system
+    attributes:
+      label: System and versions
+      description: Windows build, GPU models, drivers, notebook model, power source and tool version.
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Before, after, and after restart
+      description: System CPU measurements, Task Manager refresh mode, other sensor/graphics programs, and whether Check accepted the configuration.
+    validations:
+      required: true
+  - type: textarea
+    id: errors
+    attributes:
+      label: Errors or redacted observations
+      description: Include a small relevant excerpt rather than complete private reports.

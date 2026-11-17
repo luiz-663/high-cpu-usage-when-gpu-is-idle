@@ -1,0 +1,13 @@
+# Local runtime reports, machine backups, diagnostic captures and editor state
+*.log
+*.dmp
+*.etl
+*.etlx
+original-backup.json
+workaround-*.json
+applied-cpu.*
+test-results.json
+.vs/
+.vscode/
+Thumbs.db
+Desktop.ini
