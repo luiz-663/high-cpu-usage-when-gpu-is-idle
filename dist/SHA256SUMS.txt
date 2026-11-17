@@ -1,1 +1,1 @@
-3ac74e6699572684d3b5c1a69db298e6476269a9fb99f26b76741148d46829dd  DxgKrnl-DiagLog-CPU-Workaround.cmd
+2cf85a3430fcc9410e2ba977542dc544fc1b401ecc836932958a453ea3f4cfab  High-CPU-Usage-When-GPU-Is-Idle.cmd

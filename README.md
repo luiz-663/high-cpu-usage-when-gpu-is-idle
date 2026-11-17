@@ -1,4 +1,6 @@
-# DxgKrnl DiagLog CPU Workaround
+# High CPU Usage When the GPU Is Idle
+
+*Experimental Windows workaround*
 
 A reversible Windows workaround for **sustained System (PID 4) CPU usage from the interaction between DxgKrnl performance queries and DiagLog tracing** in the investigated configuration. Querying an inactive discrete GPU exposed the problem; GPU inactivity alone was not the cause. The workaround preserves existing GPU sleep and power settings.
 
@@ -6,7 +8,7 @@ A reversible Windows workaround for **sustained System (PID 4) CPU usage from th
 
 ## Download and use
 
-Download **[DxgKrnl-DiagLog-CPU-Workaround.cmd](https://github.com/luiz-663/dxgkrnl-diaglog-cpu-workaround/releases/download/v0.1.1/DxgKrnl-DiagLog-CPU-Workaround.cmd)** from the [v0.1.1 release](https://github.com/luiz-663/dxgkrnl-diaglog-cpu-workaround/releases/tag/v0.1.1). Only this file is needed to run the tool. Source code is included in this repository; [SHA256SUMS.txt](dist/SHA256SUMS.txt) records the distributed file's hash.
+Download **[High-CPU-Usage-When-GPU-Is-Idle.cmd](https://github.com/luiz-663/high-cpu-usage-when-gpu-is-idle/releases/download/v0.1.2/High-CPU-Usage-When-GPU-Is-Idle.cmd)** from the [v0.1.2 release](https://github.com/luiz-663/high-cpu-usage-when-gpu-is-idle/releases/tag/v0.1.2). Only this file is needed to run the tool. Source code is included in this repository; [SHA256SUMS.txt](dist/SHA256SUMS.txt) records the distributed file's hash.
 
 1. Double-click the `.cmd` and approve the administrator prompt.
 2. Choose **1 — Check configuration** first.
@@ -34,6 +36,12 @@ An independent program reproduced the sustained CPU cost by querying WDDM **NODE
 In the examined configuration, the default **DiagLog** ETW session enabled a DxgKrnl keyword called **MixedReality**. Kernel code analysis indicated that this enabled a tracing path which bypassed the NodePerfData cache, including a guard associated with D3 synchronization. Repeated queries then involved NVIDIA driver work and power activation. Removing only that keyword allowed the normal cache path to be used again.
 
 The keyword name does not establish that a mixed-reality application was running. The sustained CPU cost was mainly in System threads; measured DPC/ISR time did not account for the whole 3–4%.
+
+## Related NVIDIA forum reports
+
+The NVIDIA Developer Forums thread **[10% CPU utilization at idle](https://forums.developer.nvidia.com/t/10-cpu-utilization-at-idle/319659)** contains user reports of elevated System CPU on NVIDIA-equipped Windows 11 24H2 laptops. A **[follow-up post specifically reports that closing Task Manager returns System CPU to normal](https://forums.developer.nvidia.com/t/10-cpu-utilization-at-idle/319659/9)**.
+
+These are community observations with overlapping symptoms, not an NVIDIA confirmation of this project's diagnosis. They do not establish that every report has the same DiagLog/cache mechanism, that this workaround fixes those machines, or that the behavior was introduced in 24H2. The controlled measurements and kernel analysis described here are separate evidence from the notebook investigated for this project.
 
 ## What the tool changes
 
@@ -98,8 +106,8 @@ If an operation fails, read the error and local operation log before repeating i
 ## Command-line options
 
 ```bat
-DxgKrnl-DiagLog-CPU-Workaround.cmd /check
-DxgKrnl-DiagLog-CPU-Workaround.cmd /status
+High-CPU-Usage-When-GPU-Is-Idle.cmd /check
+High-CPU-Usage-When-GPU-Is-Idle.cmd /status
 ```
 
 `/check` verifies embedded files and compiles the native helpers without changing system configuration or requesting elevation. `/status` requests administrator access if needed and reads the reviewed configuration. It does not measure CPU, prove physical sleep, or establish reboot persistence by itself.
@@ -113,7 +121,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Build.ps1
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\Test-Offline.ps1
 ```
 
-Output is `dist\DxgKrnl-DiagLog-CPU-Workaround.cmd` plus `dist\SHA256SUMS.txt`. No third-party build dependency is required. The launcher stores the source as Base64, a transport encoding, and checks embedded SHA-256 hashes. These hashes detect corruption; they are not a publisher signature.
+Output is `dist\High-CPU-Usage-When-GPU-Is-Idle.cmd` plus `dist\SHA256SUMS.txt`. No third-party build dependency is required. The launcher stores the source as Base64, a transport encoding, and checks embedded SHA-256 hashes. These hashes detect corruption; they are not a publisher signature.
 
 See [technical notes](docs/TECHNICAL.md), [validation](docs/VALIDATION.md), and [contributing](CONTRIBUTING.md). Reports from matching systems are useful; please include measured before/after behavior and describe the configuration, while keeping raw kernel dumps and private logs off public issues.
 

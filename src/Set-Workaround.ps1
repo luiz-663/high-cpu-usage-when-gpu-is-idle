@@ -17,7 +17,7 @@ $backupPath=Join-Path $dataRoot 'original-backup.json'
 $statusPath=Join-Path $dataRoot ('workaround-'+$Mode.ToLowerInvariant()+'-status.json')
 $key=$null;$base=$null;$registryChanged=$false;$runtimeAttempted=$false;$handle=[UInt64]0
 $registryBefore=[Int64]0;$runtimeBefore=[UInt64]0
-$result=[ordered]@{Version='0.1.1';Mode=$Mode;Time=(Get-Date -Format o);RegistryPath=$registryPath;Status='Started';Error=$null;DataDirectory=$dataRoot;RebootPersistence='Not evaluated by this command'}
+$result=[ordered]@{Version='0.1.2';Mode=$Mode;Time=(Get-Date -Format o);RegistryPath=$registryPath;Status='Started';Error=$null;DataDirectory=$dataRoot;RebootPersistence='Not evaluated by this command'}
 function ReadRuntime([string]$name){
     $s=[DxgEtwReadOnly]::Read($provider)
     if($s.SessionQueryStatus -ne 0 -or $s.ProviderQueryStatus -ne 0){throw 'ETW enumeration failed.'}

@@ -60,7 +60,7 @@ foreach($mutation in @(@{Field='MachineId';Value=('b'*64)},@{Field='OriginalValu
     try{Assert-WorkaroundBackup $changed ('a'*64) 'reviewed-path'}catch{$rejected=$true}
     Check $rejected ('Backup mismatch refused: '+$mutation.Field)
 }
-$cmdPath=Join-Path $root 'dist\DxgKrnl-DiagLog-CPU-Workaround.cmd'
+$cmdPath=Join-Path $root 'dist\High-CPU-Usage-When-GPU-Is-Idle.cmd'
 $cmd=[IO.File]::ReadAllText($cmdPath)
 $marker=':GPU_IDLE_CPU_PAYLOAD_V1'
 $position=$cmd.LastIndexOf($marker)
