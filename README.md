@@ -11,12 +11,13 @@ A reversible Windows workaround for **sustained System (PID 4) CPU usage from th
 Download **[High-CPU-Usage-When-GPU-Is-Idle.cmd](https://github.com/luiz-663/high-cpu-usage-when-gpu-is-idle/releases/download/v0.1.2/High-CPU-Usage-When-GPU-Is-Idle.cmd)** from the [v0.1.2 release](https://github.com/luiz-663/high-cpu-usage-when-gpu-is-idle/releases/tag/v0.1.2). Only this file is needed to run the tool. Source code is included in this repository; [SHA256SUMS.txt](dist/SHA256SUMS.txt) records the distributed file's hash.
 
 1. Double-click the `.cmd` and approve the administrator prompt.
-2. Choose **1 — Check configuration** first.
-3. If the symptom and configuration match, choose **2 — Apply workaround**. Allow about 30 seconds.
-4. Leave Task Manager updating normally, with games and GPU sensor tools closed, and compare **System** CPU usage.
-5. Restart Windows, then **check before reapplying** to confirm that the setting persisted.
+2. Choose **option 1 — Check configuration** to begin and check whether your system is using the original settings.
+3. Choose **option 2 — Apply workaround** only if option 1 reports **ORIGINAL CONFIGURATION ACTIVE**. Then wait approximately **30 seconds**, as instructed by the tool.
+4. Open **Task Manager**, set its update speed to **Normal**, and check whether **System** CPU usage has returned to its normal idle level. **For a valid check, no application should be using the discrete NVIDIA GPU, and no other monitoring tools should be open.**
+5. Restart your computer, then open Task Manager again and verify that System CPU usage remains at its normal idle level, confirming that the problem stays resolved after restarting.
+6. If you want to revert the workaround, choose **option 3 — Restore original configuration**.
 
-Choose **3 — Restore original configuration** to undo. Restoring may bring back the CPU symptom. Opening the menu does not automatically apply anything.
+Restoring may bring back the CPU symptom. Opening the menu does not automatically apply anything.
 
 The title, menu, and tool messages are in English. Validation uses native ETW data and the Windows PLA API's structured XML fields, rather than translated `logman` output. Windows-generated error messages may still follow the OS language.
 
