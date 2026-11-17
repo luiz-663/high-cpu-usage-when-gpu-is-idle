@@ -37,11 +37,16 @@ In the examined configuration, the default **DiagLog** ETW session enabled a Dxg
 
 The keyword name does not establish that a mixed-reality application was running. The sustained CPU cost was mainly in System threads; measured DPC/ISR time did not account for the whole 3–4%.
 
-## Related NVIDIA forum reports
+## Related community reports
 
-The NVIDIA Developer Forums thread **[10% CPU utilization at idle](https://forums.developer.nvidia.com/t/10-cpu-utilization-at-idle/319659)** contains user reports of elevated System CPU on NVIDIA-equipped Windows 11 24H2 laptops. A **[follow-up post specifically reports that closing Task Manager returns System CPU to normal](https://forums.developer.nvidia.com/t/10-cpu-utilization-at-idle/319659/9)**.
+Related discussions:
 
-These are community observations with overlapping symptoms, not an NVIDIA confirmation of this project's diagnosis. They do not establish that every report has the same DiagLog/cache mechanism, that this workaround fixes those machines, or that the behavior was introduced in 24H2. The controlled measurements and kernel analysis described here are separate evidence from the notebook investigated for this project.
+- **NVIDIA GeForce Forums:** [Windows 11 24H2 — high CPU usage / System idle](https://www.nvidia.com/en-us/geforce/forums/geforce-laptops/6/556967/windows-11-24h2-high-cpu-usage-system-idle/).
+- **Reddit, r/WindowsHelp:** [High CPU usage due to System process after updating to 24H2](https://www.reddit.com/r/WindowsHelp/comments/1i2e7s5/high_cpu_usage_due_to_system_process_after/).
+
+The Reddit discussion includes reports of elevated System CPU after a Windows 11 24H2 update and differing results across NVIDIA driver versions. Some users report improvement after a rollback or a later driver update; these are observations about their configurations.
+
+These references provide community context, not an NVIDIA confirmation of this project's diagnosis. They do not establish that every report has the same DiagLog/cache mechanism, that this workaround fixes those machines, or that the behavior was introduced in 24H2. The controlled measurements and kernel analysis described here are separate evidence from the notebook investigated for this project.
 
 ## What the tool changes
 

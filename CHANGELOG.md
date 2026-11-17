@@ -5,7 +5,7 @@
 - Adopt **High CPU Usage When the GPU Is Idle** as the user-facing title, with **Experimental Windows workaround** as the subtitle.
 - Update the repository address, download filename, launcher, menu, and documentation links.
 - Keep the explanation of the specific DxgKrnl/DiagLog query interaction and all existing backup/registry behavior.
-- Link the related NVIDIA Developer Forums discussion and the post reporting the Task Manager trigger, distinguishing community reports from the project's own evidence.
+- Link the related NVIDIA GeForce Forums discussion and r/WindowsHelp post, distinguishing community reports from the project's own evidence.
 
 ## 0.1.1 — 2026-11-17
 
