@@ -8,11 +8,14 @@ A reversible Windows workaround for **sustained System (PID 4) CPU usage from th
 
 ## Download and use
 
-Download **[High-CPU-Usage-When-GPU-Is-Idle.cmd](https://github.com/luiz-663/high-cpu-usage-when-gpu-is-idle/releases/download/v0.1.2/High-CPU-Usage-When-GPU-Is-Idle.cmd)** from the [v0.1.2 release](https://github.com/luiz-663/high-cpu-usage-when-gpu-is-idle/releases/tag/v0.1.2). Only this file is needed to run the tool. Source code is included in this repository; [SHA256SUMS.txt](dist/SHA256SUMS.txt) records the distributed file's hash.
+Download **[High-CPU-Usage-When-GPU-Is-Idle.cmd](https://github.com/luiz-663/high-cpu-usage-when-gpu-is-idle/releases/download/v0.1.3/High-CPU-Usage-When-GPU-Is-Idle.cmd)** from the [v0.1.3 release](https://github.com/luiz-663/high-cpu-usage-when-gpu-is-idle/releases/tag/v0.1.3). Only this file is needed to run the tool. The source code is included in this repository. [SHA256SUMS.txt](dist/SHA256SUMS.txt) records the distributed file's hash.
 
 1. Double-click the `.cmd` and approve the administrator prompt.
 2. Choose **option 1 — Check configuration** to begin and check whether your system is using the original settings.
-3. Choose **option 2 — Apply workaround** only if option 1 reports **ORIGINAL CONFIGURATION ACTIVE**. Then wait approximately **30 seconds**, as instructed by the tool.
+3. Choose **option 2 — Measure, apply workaround, and measure again** only if option 1 reports **ORIGINAL CONFIGURATION ACTIVE**. Close Task Manager and other GPU monitors, and keep the NVIDIA GPU free of graphics workloads. Allow about **one minute** for the tool to complete these steps.
+   1. It repeatedly queries NVIDIA GPU performance data to reproduce the observed trigger and measures the average CPU usage of the **System** process with the original settings.
+   2. It saves or verifies the backup, applies the workaround, and checks the new settings in the registry and the live DiagLog session.
+   3. It repeats the measurement with the same GPU and query, then shows both averages in a before-and-after box. If the final measurement fails, the tool reports an incomplete comparison and the workaround stays applied.
 4. Open **Task Manager**, set its update speed to **Normal**, and check whether **System** CPU usage has returned to its normal idle level. **For a valid check, no application should be using the discrete NVIDIA GPU, and no other monitoring tools should be open.**
 5. Restart your computer, then open Task Manager again and verify that System CPU usage remains at its normal idle level, confirming that the problem stays resolved after restarting.
 6. If you want to revert the workaround, choose **option 3 — Restore original configuration**.
@@ -25,6 +28,7 @@ The title, menu, and tool messages are in English. Validation uses native ETW da
 
 - Windows 11 on x64, built-in **Windows PowerShell 5.1**, administrator access, and the Windows PLA COM API.
 - The exact WDI registry entry, DiagLog session identity, keyword masks, level, and filter settings checked by the tool must match.
+- Option 2 requires exactly one NVIDIA hardware adapter visible to Windows and a successful NodePerfData query. An integrated GPU can be present.
 - Having the same GPU or similar hardware does not prove the same cause. The tool checks configuration; it does not diagnose the origin of every System CPU problem.
 - Windows on ARM and other hardware/build combinations have not been validated.
 

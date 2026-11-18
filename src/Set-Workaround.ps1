@@ -6,7 +6,11 @@ $ErrorActionPreference='Stop'
 Add-Type -Path (Join-Path $PSScriptRoot 'DiagLogKeywordControl.cs')
 Add-Type -Path (Join-Path $PSScriptRoot 'WdiRegistryAccess.cs')
 [DiagLogKeywordControl]::ValidateLayout() | Out-Null
-if($CompileOnly){'Compilation succeeded; no system configuration changes.';return}
+if($CompileOnly){
+    & (Join-Path $PSScriptRoot 'Measure-GpuQueryCPU.ps1') -CompileOnly
+    'Compilation succeeded; no system configuration changes.'
+    return
+}
 if(-not([Security.Principal.WindowsPrincipal]::new([Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))){throw 'Run in a 64-bit administrator Windows PowerShell.'}
 $dataRoot=Get-WorkaroundDataDirectory
 $machineId=Get-WorkaroundMachineId
@@ -17,7 +21,7 @@ $backupPath=Join-Path $dataRoot 'original-backup.json'
 $statusPath=Join-Path $dataRoot ('workaround-'+$Mode.ToLowerInvariant()+'-status.json')
 $key=$null;$base=$null;$registryChanged=$false;$runtimeAttempted=$false;$handle=[UInt64]0
 $registryBefore=[Int64]0;$runtimeBefore=[UInt64]0
-$result=[ordered]@{Version='0.1.2';Mode=$Mode;Time=(Get-Date -Format o);RegistryPath=$registryPath;Status='Started';Error=$null;DataDirectory=$dataRoot;RebootPersistence='Not evaluated by this command'}
+$result=[ordered]@{Version='0.1.3';Mode=$Mode;Time=(Get-Date -Format o);RegistryPath=$registryPath;Status='Started';Error=$null;DataDirectory=$dataRoot;RebootPersistence='Not evaluated by this command'}
 function ReadRuntime([string]$name){
     $s=[DxgEtwReadOnly]::Read($provider)
     if($s.SessionQueryStatus -ne 0 -or $s.ProviderQueryStatus -ne 0){throw 'ETW enumeration failed.'}
@@ -35,6 +39,40 @@ function CheckRuntime($state){
     if($masks.Count -ne 1 -or $masks[0] -notin @('0x0000000002030000','0x0000000000030000')){throw 'Unexpected DxgKrnl keywords; no automatic overwrite.'}
     foreach($entry in $entries){if($entry.IsEnabled -ne 1 -or $entry.Level -ne 255 -or $entry.MatchAllKeyword -ne '0x0000000000000000' -or $entry.EnableProperty -notin @(0,64)){throw 'Unexpected provider settings.'}}
     return [pscustomobject]@{Handle=[UInt64]$session[0].HistoricalContext;Mask=[Convert]::ToUInt64($masks[0].Substring(2),16)}
+}
+function Assert-TaskManagerClosed {
+    if(Get-Process -Name Taskmgr -ErrorAction SilentlyContinue){
+        throw 'Close Task Manager during the comparison. Its own GPU queries can affect the measurement.'
+    }
+}
+function Measure-GpuPhase([string]$Phase,[string]$ExpectedAdapterId){
+    Assert-TaskManagerClosed
+    $outputPath=Join-Path $result.CpuComparison.ReportDirectory ($Phase+'.json')
+    $errorPath=Join-Path $result.CpuComparison.ReportDirectory ($Phase+'-error.txt')
+    $probePath=Join-Path $PSScriptRoot 'Measure-GpuQueryCPU.ps1'
+    $psExe=Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
+    $arguments=@('-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',('"'+$probePath+'"'),'-OutputFile',('"'+$outputPath+'"'))
+    if($ExpectedAdapterId){
+        if($ExpectedAdapterId -cnotmatch '^[0-9A-F]{16}$'){throw 'Invalid adapter identifier from the first measurement.'}
+        $arguments+=@('-ExpectedAdapterId',$ExpectedAdapterId)
+    }
+    $worker=Start-Process -FilePath $psExe -ArgumentList $arguments -WindowStyle Hidden -RedirectStandardError $errorPath -PassThru
+    try{
+        # Windows PowerShell can lose the exit code if it never opens a process handle.
+        $null=$worker.Handle
+        if(-not $worker.WaitForExit(40000)){throw 'The GPU query measurement exceeded its 40-second time limit.'}
+        if($worker.ExitCode -ne 0){
+            $detail=([string](Get-Content -LiteralPath $errorPath -Raw)).Trim()
+            throw ('The GPU query measurement failed. '+$detail)
+        }
+    }finally{
+        try{if(-not $worker.HasExited){$worker.Kill();[void]$worker.WaitForExit(3000)}}
+        finally{$worker.Dispose()}
+    }
+    Assert-TaskManagerClosed
+    $measurement=Get-Content -LiteralPath $outputPath -Raw|ConvertFrom-Json
+    if($measurement.SampleCount -ne 20 -or @($measurement.Samples).Count -ne 20){throw 'The GPU query measurement is incomplete.'}
+    return $measurement | Select-Object Adapter,AdapterId,SampleCount,AveragePercent,PeakPercent,AverageQueryMilliseconds
 }
 try{
     $base=[Microsoft.Win32.RegistryKey]::OpenBaseKey([Microsoft.Win32.RegistryHive]::LocalMachine,[Microsoft.Win32.RegistryView]::Registry64)
@@ -55,6 +93,25 @@ try{
         $result.Status='ReadOnly'
         $result.BackupPresent=Test-Path -LiteralPath $backupPath
     }else{
+        if($Mode -eq 'Apply'){
+            if($registryBefore -ne 33554432 -or $runtimeBefore -ne 0x2030000){
+                throw 'The before/after comparison requires the original configuration in both the registry and DiagLog. Use option 1 to check the current state.'
+            }
+            $comparisonDirectory=Join-Path $dataRoot ('comparison-'+[Guid]::NewGuid().ToString('N'))
+            [IO.Directory]::CreateDirectory($comparisonDirectory)|Out-Null
+            $result.CpuComparison=[ordered]@{Status='MeasuringBefore';ReportDirectory=$comparisonDirectory}
+            Write-Output '[progress] 1/3 Measuring BEFORE: querying NVIDIA performance data once per second under the original configuration.'
+            Write-Output '[progress]     Collecting 20 CPU samples after 3 warm-up queries. Keep Task Manager and other monitors closed.'
+            $result.CpuComparison.Before=Measure-GpuPhase 'before' ''
+            $result.CpuComparison.Status='BeforeMeasured'
+            Write-Output ('[progress]     Before: System CPU average {0:F2}%, peak {1:F2}%.' -f $result.CpuComparison.Before.AveragePercent,$result.CpuComparison.Before.PeakPercent)
+            $current=CheckRuntime (ReadRuntime 'before-write')
+            if($current.Handle -ne $handle -or $current.Mask -ne $runtimeBefore -or [Int64]$key.GetValue('Keyword') -ne $registryBefore){
+                throw 'The configuration changed during the before measurement. Run Check before retrying.'
+            }
+            Assert-DiagLogProviderConfiguration (Read-DiagLogProviderConfiguration) $handle $runtimeBefore
+            Write-Output '[progress] 2/3 Saving or verifying the backup, applying the DiagLog workaround and verifying the new configuration.'
+        }
         if(Test-Path -LiteralPath $backupPath){
             $backup=Get-Content -LiteralPath $backupPath -Raw|ConvertFrom-Json
             Assert-WorkaroundBackup $backup $machineId $registryPath
@@ -81,16 +138,29 @@ try{
     }
 }catch{
     $result.Status='Failed';$result.Error=($_|Out-String)
+    if($result.CpuComparison){$result.CpuComparison.Status='Interrupted';$result.CpuComparison.Error=$_.Exception.Message}
     if($registryChanged -and $key){try{$key.SetValue('Keyword',$registryBefore,[Microsoft.Win32.RegistryValueKind]::QWord);$key.Flush();$result.RegistryRollback='Succeeded'}catch{$result.RegistryRollback=($_|Out-String)}}
     if($runtimeAttempted -and $handle){try{$live=CheckRuntime ([DxgEtwReadOnly]::Read($provider));if($live.Handle -ne $handle){throw 'Session changed; runtime rollback refused.'};[DiagLogKeywordControl]::SetKeywords($handle,$runtimeBefore);$result.RuntimeRollback='Succeeded'}catch{$result.RuntimeRollback=($_|Out-String)}}
 }finally{
     if($key){$key.Dispose()};if($base){$base.Dispose()}
-    $result|ConvertTo-Json -Depth 6|Set-Content -LiteralPath $statusPath -Encoding UTF8
-    $result|ConvertTo-Json -Depth 6
 }
+if($Mode -eq 'Apply' -and $result.Status -eq 'Applied'){
+    Write-Output '[progress] 3/3 Configuration applied. Measuring AFTER with the same query, adapter and sampling interval.'
+    try{
+        $result.CpuComparison.After=Measure-GpuPhase 'after' $result.CpuComparison.Before.AdapterId
+        $current=CheckRuntime (ReadRuntime 'after-measurement')
+        $currentKeyword=[Microsoft.Win32.Registry]::GetValue($registryPath,'Keyword',$null)
+        if($current.Handle -ne $handle -or $current.Mask -ne $targetRuntime -or $currentKeyword -ne $targetRegistry){
+            throw 'The configuration changed during the after measurement.'
+        }
+        Assert-DiagLogProviderConfiguration (Read-DiagLogProviderConfiguration) $handle $targetRuntime
+        $result.CpuComparison.Status='Completed'
+        $result.CpuComparison.ReductionPercentagePoints=$result.CpuComparison.Before.AveragePercent-$result.CpuComparison.After.AveragePercent
+    }catch{
+        $result.CpuComparison.Status='Incomplete'
+        $result.CpuComparison.Error=$_.Exception.Message
+    }
+}
+$result|ConvertTo-Json -Depth 6|Set-Content -LiteralPath $statusPath -Encoding UTF8
+$result|ConvertTo-Json -Depth 6
 if($result.Status -eq 'Failed'){exit 1}
-if($Mode -eq 'Apply'){
-    Start-Sleep -Seconds 8
-    try{& (Join-Path $PSScriptRoot 'Measure-SystemCPU.ps1') -Seconds 20 -OutputFile (Join-Path $dataRoot 'applied-cpu.json')|Out-File -LiteralPath (Join-Path $dataRoot 'applied-cpu.txt')}
-    catch{Write-Warning ('Configuration applied, but CPU measurement failed: '+$_.Exception.Message)}
-}

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.3 — 2026-11-18
+
+- Make option 2 show what it is doing at each stage. It reports when it measures System CPU under repeated NVIDIA GPU performance queries, saves or verifies the backup, applies and checks the workaround, and repeats the measurement.
+- Show the average System CPU usage before and after the workaround in a boxed comparison. If the final measurement fails, explain that the comparison is incomplete.
+- Update the download and usage instructions with the new workflow and the approximate one-minute runtime.
+
 ## 0.1.2 — 2026-11-17
 
 - Adopt **High CPU Usage When the GPU Is Idle** as the user-facing title, with **Experimental Windows workaround** as the subtitle.
