@@ -2,9 +2,13 @@
 
 *Experimental Windows workaround*
 
-A reversible Windows workaround for **sustained System (PID 4) CPU usage from the interaction between DxgKrnl performance queries and DiagLog tracing** in the investigated configuration. Querying an inactive discrete GPU exposed the problem; GPU inactivity alone was not the cause. The workaround preserves existing GPU sleep and power settings.
+On some Windows 11 laptops with NVIDIA graphics, the **System** process can keep using several percent of the CPU while the NVIDIA GPU sits idle. Some users first noticed similar symptoms after updating to Windows 11 version 24H2. It’s still unclear whether that update introduced the issue investigated here.
 
-**Experimental, configuration-specific, and validated on one notebook.** This is not an official Microsoft/NVIDIA fix or a general cure for DPC latency. The tool refuses configurations outside the values examined in the original investigation.
+This project investigates the problem on a Lenovo Legion Y530 with a **GeForce GTX 1050 Ti**. NVIDIA has ended regular Game Ready driver support for GeForce GTX 10 Series laptop GPUs. These GPUs now receive **security-only updates**, so issues like this one are no longer covered by routine driver bug fixes. On the laptop tested, **System (PID 4)** used roughly **3–4% of the CPU** while Task Manager was open and the NVIDIA GPU was idle.
+
+The investigation traced the sustained CPU usage to an interaction between **DxgKrnl performance queries and DiagLog tracing**. The symptom appeared when Task Manager or another tool repeatedly queried performance data from the idle GPU. The reversible workaround changes which graphics events DiagLog collects and preserves the existing GPU sleep and power settings.
+
+**Experimental and tested on one laptop.** The tool checks for the specific Windows configuration investigated here before it can apply the workaround.
 
 ## Download and use
 
